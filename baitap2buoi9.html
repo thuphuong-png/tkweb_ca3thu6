@@ -28,20 +28,22 @@
 
         // 3. Xác định Khóa và Khoa
         const coursePeriod = studentId.substring(0, 2); // 2 ký tự đầu: 26
+        // Lấy mã ngành từ ký tự thứ 3 đến thứ 6 (Ví dụ: A404)
+        const facultyCode = studentId.substring(2, 6); 
         let faculty = "Chưa xác định";
 
-        // Kiểm tra mã khoa dựa trên danh sách bạn cung cấp
-        if (studentId.startsWith("26A401")) faculty = "Ngân hàng, Tài chính";
-        else if (studentId.startsWith("26A404")) faculty = "Công nghệ thông tin & Kinh tế số";
-        else if (studentId.startsWith("26A402")) faculty = "Kế toán - Kiểm toán";
-        else if (studentId.startsWith("26A407")) faculty = "Kinh tế đầu tư";
-        else if (studentId.startsWith("26A405")) faculty = "Quản trị kinh doanh; Kinh doanh quốc tế";
-        else if (studentId.startsWith("26A406")) faculty = "Luật kinh tế";
-        else if (studentId.startsWith("26A403")) faculty = "QTDL";
-        else if (studentId.startsWith("26A751")) faculty = "Ngôn ngữ";
+        // Kiểm tra dựa trên facultyCode để dùng được cho cả khóa 26, 27, 28...
+        if (facultyCode === "A401") faculty = "Ngân hàng, Tài chính";
+        else if (facultyCode === "A404") faculty = "Công nghệ thông tin & Kinh tế số";
+        else if (facultyCode === "A402") faculty = "Kế toán - Kiểm toán";
+        else if (facultyCode === "A407") faculty = "Kinh tế đầu tư";
+        else if (facultyCode === "A405") faculty = "Quản trị kinh doanh; Kinh doanh quốc tế";
+        else if (facultyCode === "A406") faculty = "Luật kinh tế";
+        else if (facultyCode === "A403") faculty = "QTDL";
+        else if (facultyCode === "A751") faculty = "Ngôn ngữ";
 
         // 4. Tính tổng 4 số cuối
-        const lastFour = studentId.slice(-4); // "1234"
+        const lastFour = studentId.slice(-4); // "2132"
         let sum = 0;
         for (let char of lastFour) {
             sum += parseInt(char);
