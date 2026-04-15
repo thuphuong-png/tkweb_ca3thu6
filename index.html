@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu thông tin sinh viên Học viện Ngân hàng</title>
+    <style>
+        :root {
+            --ba-red: #c0392b;
+            --ba-blue: #2980b9;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .form-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: var(--ba-red); text-align: center; margin-bottom: 25px; text-transform: uppercase; font-size: 1.5rem; }
+        
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        input:focus { outline: none; border-color: var(--ba-blue); box-shadow: 0 0 5px rgba(41, 128, 185, 0.3); }
+        
+        button { width: 100%; padding: 12px; background-color: var(--ba-red); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { background-color: #a02d22; }
+
+        #result { margin-top: 25px; padding: 20px; border-radius: 10px; background-color: #f9f9f9; border-left: 5px solid var(--ba-blue); display: none; }
+        .highlight { color: var(--ba-blue); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="form-card">
+        <h2>Tra cứu thông tin BA</h2>
+        
+        <div class="input-group">
+            <label for="fullName">Họ và tên (không dấu):</label>
+            <input type="text" id="fullName" placeholder="Ví dụ: Nguyen Thu Phuong">
+        </div>
+
+        <div class="input-group">
+            <label for="studentId">Mã sinh viên:</label>
+            <input type="text" id="studentId" placeholder="Ví dụ: 26A4042132">
+        </div>
+
+        <button onclick="processInfo()">Hiển thị kết quả</button>
+
+        <div id="result">
+            </div>
+    </div>
+
+    <script>
+      
+        const studentManager = {
+            MAX_COURSE: 28,
+            FACULTY_MAP: {
+                "A401": "Ngân hàng, Tài chính",
+                "A404": "Công nghệ thông tin & Kinh tế số",
+                "A402": "Kế toán - Kiểm toán",
+                "A407": "Kinh tế đầu tư",
+                "A405": "Quản trị kinh doanh; Kinh doanh quốc tế",
+                "A406": "Luật kinh tế",
+                "A403": "QTDL",
+                "A751": "Ngôn ngữ"
+            },
+
+            // xóa dấu tiếng Việt
+            normalizeText(str) {
+                return str.normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+                        .trim().replace(/\s+/g, ' ');
+            },
+
+            // kiểm tra hợp lệ của MSSV
+            validateId(studentId) {
+                const idRegex = /^[A-Z0-9]{10}$/; // Đúng 10 ký tự chữ/số
+                if (!idRegex.test(studentId)) return "Mã sinh viên phải đúng 10 ký tự và không có ký tự đặc biệt!";
+
+                const course = parseInt(studentId.substring(0, 2));
+                if (isNaN(course) || course < 1 || course > this.MAX_COURSE) {
+                    return `Khóa sinh viên (2 số đầu) phải từ 01 đến ${this.MAX_COURSE}!`;
+                }
+
+                const lastFour = studentId.slice(-4);
+                if (!/^\d{4}$/.test(lastFour)) return "4 ký tự cuối của MSSV phải là chữ số!";
+
+                return null; // Không có lỗi
+            },
+
+            // Hàm tạo Email
+            generateEmail(fullNameNoTones, studentId) {
+                const nameParts = fullNameNoTones.split(" ");
+                const firstName = nameParts[nameParts.length - 1].toLowerCase();
+                let initials = "";
+                for (let i = 0; i < nameParts.length - 1; i++) {
+                    initials += nameParts[i][0].toLowerCase();
+                }
+                return `${firstName}${initials}.${studentId.toLowerCase()}@hvnh.edu.vn`;
+            },
+
+            sumLastFour(studentId) {
+                return studentId.slice(-4).split('').reduce((a, b) => a + parseInt(b), 0);
+            }
+        };
+
+        function processInfo() {
+
+            const fullNameRaw = document.getElementById('fullName').value;
+            const studentId = document.getElementById('studentId').value.trim().toUpperCase();
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'none';
+
+            if (!fullNameRaw || !studentId) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+
+            const fullNameNoTones = studentManager.normalizeText(fullNameRaw);
+            if (fullNameNoTones.split(" ").length < 2) {
+                alert("Vui lòng nhập đầy đủ cả Họ và Tên!");
+                return;
+            }
+
+            const error = studentManager.validateId(studentId);
+            if (error) {
+                alert(error);
+                return;
+            }
+
+            const email = studentManager.generateEmail(fullNameNoTones, studentId);
+            const faculty = studentManager.FACULTY_MAP[studentId.substring(2, 6)] || "Hệ đào tạo khác";
+            const sum = studentManager.sumLastFour(studentId);
+            const course = studentId.substring(0, 2);
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <p><strong>Email:</strong> <span class="highlight">${email}</span></p>
+                <p>Xin chào <span class="highlight">${fullNameRaw}</span>,</p>
+                <p>Bạn là sinh viên khóa <span class="highlight">${course}</span>, khoa <span class="highlight">${faculty}</span>.</p>
+                <p>Tổng 4 số cuối MSSV: <span class="highlight">${sum}</span></p>
+            `;
+        }
+    </script>
+</body>
+</html>
